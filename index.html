@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Reh Dogg Tropical Underwater Pinball</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      overflow: hidden;
+      touch-action: none;
+      background:
+        radial-gradient(circle at 20% 8%, rgba(255,255,255,0.55), transparent 12%),
+        radial-gradient(circle at 75% 14%, rgba(62,255,231,0.35), transparent 18%),
+        linear-gradient(160deg, #05b7e5 0%, #087ec6 46%, #04527f 100%);
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      color: #fff;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+      position: fixed;
+      inset: 0;
+    }
+
+    #gameWrap {
+      position: relative;
+      width: min(96vw, 650px);
+      height: min(96vh, 860px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .brandBar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 14px;
+      border: 2px solid rgba(255,255,255,0.55);
+      border-radius: 18px;
+      background: linear-gradient(90deg, rgba(0,50,104,0.82), rgba(0,193,211,0.66));
+      box-shadow: 0 10px 30px rgba(0,0,0,0.28), inset 0 0 18px rgba(255,255,255,0.2);
+    }
+
+    .brandTitle {
+      font-weight: 1000;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-size: clamp(17px, 3.5vw, 30px);
+      color: #ffed72;
+      text-shadow: 0 3px 0 #005177, 0 0 16px rgba(255,237,114,0.9);
+      line-height: 1;
+    }
+
+    .brandSub {
+      font-weight: 900;
+      font-size: clamp(10px, 2vw, 14px);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #c8fff7;
+    }
+
+    .hud {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .hudCard {
+      min-width: 74px;
+      padding: 6px 9px;
+      border-radius: 12px;
+      background: rgba(0,23,54,0.7);
+      border: 1px solid rgba(183,255,252,0.65);
+      text-align: center;
+      box-shadow: inset 0 0 12px rgba(0,255,255,0.16);
+    }
+
+    .hudCard span {
+      display: block;
+      font-size: 10px;
+      color: #b9fff6;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+    }
+
+    .hudCard b {
+      display: block;
+      font-size: clamp(16px, 2.6vw, 24px);
+      color: #fff;
+      text-shadow: 0 0 10px rgba(255,255,255,0.85);
+    }
+
+    #tableShell {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      border-radius: 26px;
+      padding: 8px;
+      background:
+        linear-gradient(120deg, rgba(255,255,255,0.32), transparent 18%),
+        linear-gradient(180deg, #ffe16b, #ff8f53 48%, #0bd4dd 52%, #053969);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.38), 0 0 28px rgba(42,255,236,0.42);
+      border: 3px solid rgba(255,255,255,0.7);
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 20px;
+      background: #079dd4;
+      box-shadow: inset 0 0 34px rgba(255,255,255,0.28);
+    }
+
+    .buttonRow {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    button, .touchBtn {
+      border: 0;
+      border-radius: 16px;
+      padding: 12px 10px;
+      color: #012d44;
+      font-weight: 1000;
+      letter-spacing: 0.05em;
+      background: linear-gradient(#fff48c, #ffb03a);
+      box-shadow: 0 5px 0 #9b4d00, 0 0 18px rgba(255,237,114,0.5);
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    button:active, .touchBtn:active, .touchBtn.pressed {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #9b4d00, 0 0 18px rgba(255,237,114,0.8);
+    }
+
+    .touchBtn {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 52px;
+      background: linear-gradient(#7afcff, #14b6ff);
+      box-shadow: 0 5px 0 #005e8a, 0 0 18px rgba(122,252,255,0.45);
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 8px;
+      border-radius: 20px;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background:
+        radial-gradient(circle at 50% 14%, rgba(255,255,255,0.75), transparent 18%),
+        radial-gradient(circle at 20% 85%, rgba(255,111,64,0.5), transparent 25%),
+        linear-gradient(180deg, rgba(2,162,215,0.92), rgba(3,64,118,0.96));
+      box-shadow: inset 0 0 80px rgba(255,255,255,0.25);
+      text-align: center;
+    }
+
+    .overlay.hidden { display: none; }
+
+    .menuCard {
+      max-width: 520px;
+      width: 100%;
+      padding: 26px 20px;
+      border-radius: 26px;
+      background: rgba(0,42,82,0.72);
+      border: 2px solid rgba(255,255,255,0.72);
+      box-shadow: 0 0 32px rgba(0,255,255,0.45), inset 0 0 30px rgba(255,255,255,0.14);
+    }
+
+    .menuCard h1 {
+      margin: 0;
+      color: #ffed72;
+      font-size: clamp(34px, 9vw, 64px);
+      line-height: 0.92;
+      text-transform: uppercase;
+      text-shadow: 0 4px 0 #006b8f, 0 0 22px rgba(255,237,114,0.9);
+    }
+
+    .menuCard h2 {
+      margin: 12px 0;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: clamp(15px, 3vw, 24px);
+    }
+
+    .menuCard p {
+      color: #d9fff9;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .menuCard button {
+      width: min(100%, 320px);
+      margin: 8px auto 0;
+      font-size: 18px;
+    }
+
+    .fishBadge {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 14px 0;
+      font-size: 13px;
+      font-weight: 900;
+      color: #003a56;
+      flex-wrap: wrap;
+    }
+
+    .fishBadge span {
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.82);
+      box-shadow: 0 0 12px rgba(255,255,255,0.45);
+    }
+
+    @media (max-width: 620px) {
+      body { padding: 6px; }
+      #gameWrap { width: 100vw; height: 100dvh; gap: 4px; }
+      .brandBar { border-radius: 0 0 16px 16px; padding: 7px 8px; grid-template-columns: 1fr; }
+      .hud { justify-content: stretch; }
+      .hudCard { min-width: 0; padding: 4px 5px; }
+      #tableShell { border-radius: 18px; padding: 4px; }
+      canvas { border-radius: 15px; }
+      .buttonRow {
+        grid-template-columns: 1fr 1fr;
+        padding: 0 8px 8px;
+      }
+      button, .touchBtn { min-height: 50px; padding: 9px 6px; }
+    }
+  </style>
+</head>
+<body>
+  <main id="gameWrap" aria-label="Reh Dogg tropical underwater pinball">
+    <section class="brandBar">
+      <div>
+        <div class="brandSub">Reh Dogg Games Plus Presents</div>
+        <div class="brandTitle">Tropical Reef Pinball</div>
+      </div>
+      <div class="hud">
+        <div class="hudCard"><span>Score</span><b id="scoreValue">0</b></div>
+        <div class="hudCard"><span>Multi</span><b id="multValue">1x</b></div>
+        <div class="hudCard"><span>Balls</span><b id="ballsValue">3</b></div>
+      </div>
+    </section>
+
+    <section id="tableShell">
+      <canvas id="gameCanvas" width="600" height="760"></canvas>
+      <div id="titleScreen" class="overlay">
+        <div class="menuCard">
+          <h1>Deep Pinball</h1>
+          <h2>Tropical Underwater Arcade</h2>
+          <p>Launch through clear blue reef water. Hit coral, ride dolphin bonuses, survive sharks, and aim for the whale mouth jackpot.</p>
+          <div class="fishBadge">
+            <span>Coral Bumpers</span>
+            <span>Dolphin Multi</span>
+            <span>Shark Risk</span>
+            <span>Whale Bonus</span>
+          </div>
+          <button id="startBtn">Start Reef Run</button>
+        </div>
+      </div>
+      <div id="gameOverScreen" class="overlay hidden">
+        <div class="menuCard">
+          <h1>Game Over</h1>
+          <h2>Final Score: <span id="finalScore">0</span></h2>
+          <p>The tide rolled out, but the reef is ready for another run.</p>
+          <button id="againBtn">Play Again</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="buttonRow">
+      <button id="launchBtn">Hold Launch</button>
+      <button id="resetBtn">New Game</button>
+      <div id="leftFlipBtn" class="touchBtn">A / Left</div>
+      <div id="rightFlipBtn" class="touchBtn">S / Right</div>
+    </section>
+  </main>
+
+<script>
+(() => {
+  "use strict";
+
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  const W = 600;
+  const H = 760;
+  const ui = {
+    score: document.getElementById("scoreValue"),
+    mult: document.getElementById("multValue"),
+    balls: document.getElementById("ballsValue"),
+    title: document.getElementById("titleScreen"),
+    over: document.getElementById("gameOverScreen"),
+    final: document.getElementById("finalScore"),
+    start: document.getElementById("startBtn"),
+    again: document.getElementById("againBtn"),
+    launch: document.getElementById("launchBtn"),
+    reset: document.getElementById("resetBtn"),
+    left: document.getElementById("leftFlipBtn"),
+    right: document.getElementById("rightFlipBtn")
+  };
+
+  const audio = { ctx: null, unlocked: false, ambience: null, bubbleClock: 0 };
+  const keys = { left: false, right: false };
+  const state = {
+    mode: "title",
+    score: 0,
+    multiplier: 1,
+    balls: 3,
+    shake: 0,
+    time: 0,
+    launched: false,
+    chargingLaunch: false,
+    launchPower: 0,
+    plungerKick: 0,
+    captureType: null,
+    whaleHold: 0,
+    whaleCooldown: 0,
+    whaleDark: 0,
+    whirlpoolCooldown: 0,
+    whirlpoolHold: 0,
+    whirlpoolDark: 0,
+    bonusMode: null,
+    bonusTimer: 0,
+    treasures: [],
+    currentPhase: 0,
+    bubbles: [],
+    whaleBubbles: [],
+    ballTrail: [],
+    scoreTexts: [],
+    fish: [],
+    fishSchools: [],
+    shimmer: []
+  };
+
+  const launcher = { x: 512, restY: 672, topY: 238, releaseY: 305, left: 492, right: 532 };
+  const ball = { x: launcher.x, y: launcher.restY, vx: 0, vy: 0, r: 8, hidden: false, inLauncher: true };
+
+  const leftFlip = { x: 188, y: 674, len: 92, angle: -0.22, down: -0.22, up: -0.96, target: -0.22, side: -1 };
+  const rightFlip = { x: 412, y: 674, len: 92, angle: Math.PI + 0.22, down: Math.PI + 0.22, up: Math.PI + 0.96, target: Math.PI + 0.22, side: 1 };
+
+  const bumpers = [
+    { type: "shell", x: 118, y: 205, r: 18, points: 180, flash: 0 },
+    { type: "coral", x: 185, y: 280, r: 29, points: 120, flash: 0 },
+    { type: "shell", x: 245, y: 225, r: 20, points: 210, flash: 0 },
+    { type: "coral", x: 300, y: 330, r: 32, points: 140, flash: 0 },
+    { type: "coral", x: 415, y: 270, r: 29, points: 120, flash: 0 },
+    { type: "shell", x: 480, y: 205, r: 18, points: 180, flash: 0 },
+    { type: "post", x: 112, y: 344, r: 13, points: 90, flash: 0 },
+    { type: "post", x: 488, y: 342, r: 13, points: 90, flash: 0 },
+    { type: "post", x: 252, y: 470, r: 12, points: 80, flash: 0 },
+    { type: "post", x: 348, y: 470, r: 12, points: 80, flash: 0 },
+    { type: "dolphin", x: 150, y: 435, r: 35, points: 350, flash: 0 },
+    { type: "shark", x: 448, y: 430, r: 37, points: 600, flash: 0 }
+  ];
+
+  const whale = { baseX: 300, baseY: 145, x: 300, y: 145, rx: 98, ry: 45, mouthX: 300, mouthY: 160, mouthR: 34, flash: 0, mouthOpen: 0 };
+  const whirlpool = { x: 300, y: 250, r: 38, inner: 14, spin: 0, flash: 0 };
+  const reefWalls = [
+    { x1: 62, y1: 120, x2: 62, y2: 602 },
+    { x1: 538, y1: 120, x2: 538, y2: 602 },
+    { x1: 62, y1: 602, x2: 205, y2: 708 },
+    { x1: 538, y1: 602, x2: 395, y2: 708 },
+    { x1: 205, y1: 708, x2: 246, y2: 730 },
+    { x1: 395, y1: 708, x2: 354, y2: 730 },
+    { x1: 108, y1: 128, x2: 215, y2: 112 },
+    { x1: 385, y1: 112, x2: 492, y2: 128 },
+    { x1: 112, y1: 522, x2: 224, y2: 574 },
+    { x1: 488, y1: 522, x2: 376, y2: 574 },
+    { x1: 92, y1: 390, x2: 152, y2: 520 },
+    { x1: 508, y1: 390, x2: 448, y2: 520 },
+    { x1: 244, y1: 390, x2: 203, y2: 510 },
+    { x1: 356, y1: 390, x2: 397, y2: 510 }
+  ];
+
+  const seaweedLanes = [
+    { x1: 132, y1: 525, x2: 222, y2: 610 },
+    { x1: 468, y1: 525, x2: 378, y2: 610 },
+    { x1: 248, y1: 168, x2: 248, y2: 262 },
+    { x1: 352, y1: 168, x2: 352, y2: 262 }
+  ];
+
+  const fishTunnels = [
+    { x: 88, y: 292, w: 82, h: 34, outX: 432, outY: 248, vx: -3.8, vy: -8.4, label: "FISH TUNNEL!" },
+    { x: 430, y: 560, w: 82, h: 34, outX: 168, outY: 352, vx: 4.2, vy: -7.2, label: "REEF RETURN!" }
+  ];
+
+  function unlockAudio() {
+    if (audio.ctx && audio.ctx.state === "suspended") audio.ctx.resume();
+    if (audio.unlocked) {
+      startUnderwaterAmbience();
+      return;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    audio.ctx = audio.ctx || new AC();
+    if (audio.ctx.state === "suspended") audio.ctx.resume();
+    audio.unlocked = true;
+    startUnderwaterAmbience();
+  }
+
+  function tone(freq, duration, type = "sine", gain = 0.05, endFreq = null, delay = 0) {
+    if (!audio.ctx) return;
+    const now = audio.ctx.currentTime + delay;
+    const osc = audio.ctx.createOscillator();
+    const g = audio.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (endFreq) osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), now + duration);
+    g.gain.setValueAtTime(gain, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(g).connect(audio.ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
+  }
+
+  function noise(duration, gain = 0.06, filterFreq = 900, delay = 0) {
+    if (!audio.ctx) return;
+    const now = audio.ctx.currentTime + delay;
+    const len = Math.max(1, Math.floor(audio.ctx.sampleRate * duration));
+    const buffer = audio.ctx.createBuffer(1, len, audio.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = audio.ctx.createBufferSource();
+    const filter = audio.ctx.createBiquadFilter();
+    const g = audio.ctx.createGain();
+    src.buffer = buffer;
+    filter.type = "bandpass";
+    filter.frequency.value = filterFreq;
+    g.gain.setValueAtTime(gain, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    src.connect(filter).connect(g).connect(audio.ctx.destination);
+    src.start(now);
+  }
+
+  function startUnderwaterAmbience() {
+    if (!audio.ctx || audio.ambience) return;
+    const len = audio.ctx.sampleRate * 3;
+    const buffer = audio.ctx.createBuffer(1, len, audio.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const swell = Math.sin(i / audio.ctx.sampleRate * Math.PI * 2 * 0.18) * 0.35 + 0.65;
+      data[i] = (Math.random() * 2 - 1) * 0.22 * swell;
+    }
+    const src = audio.ctx.createBufferSource();
+    const low = audio.ctx.createBiquadFilter();
+    const g = audio.ctx.createGain();
+    const lfo = audio.ctx.createOscillator();
+    const lfoGain = audio.ctx.createGain();
+    src.buffer = buffer;
+    src.loop = true;
+    low.type = "lowpass";
+    low.frequency.value = 380;
+    g.gain.value = 0.018;
+    lfo.frequency.value = 0.08;
+    lfoGain.gain.value = 0.007;
+    lfo.connect(lfoGain).connect(g.gain);
+    src.connect(low).connect(g).connect(audio.ctx.destination);
+    src.start();
+    lfo.start();
+    audio.ambience = { src, lfo, gain: g };
+  }
+
+  function playSubtleBubbleSound() {
+    if (!audio.ctx) return;
+    const p = 720 + Math.random() * 520;
+    tone(p, 0.045, "sine", 0.012, p * 1.35);
+    tone(p * 0.62, 0.035, "triangle", 0.008, p * 0.9, 0.035);
+  }
+
+  function playFlipperSound() {
+    tone(150, 0.045, "square", 0.075, 340);
+    tone(520, 0.045, "triangle", 0.025, 280, 0.012);
+    noise(0.025, 0.018, 1200);
+  }
+  function playRicochetSound() {
+    const p = 680 + Math.random() * 160;
+    tone(p, 0.055, "triangle", 0.045, p * 1.45);
+    tone(p * 1.9, 0.035, "sine", 0.022, p * 2.35, 0.018);
+    noise(0.04, 0.025, 1900);
+  }
+  function playBubblePopSound() {
+    tone(760 + Math.random() * 120, 0.06, "triangle", 0.05, 1180 + Math.random() * 180);
+    noise(0.04, 0.025, 1800);
+    playSubtleBubbleSound();
+  }
+  function playDolphinSound() {
+    tone(880, 0.08, "sine", 0.05, 1320);
+    tone(1320, 0.11, "sine", 0.045, 1760, 0.08);
+    tone(1960, 0.09, "triangle", 0.028, 2450, 0.18);
+  }
+  function playSharkSound() {
+    tone(120, 0.24, "sawtooth", 0.09, 48);
+    tone(62, 0.34, "sine", 0.06, 34, 0.04);
+    noise(0.18, 0.082, 520);
+  }
+  function playWhaleSound() {
+    tone(82, 0.55, "sine", 0.09, 48);
+    tone(170, 0.35, "triangle", 0.045, 290, 0.22);
+    tone(54, 0.46, "sine", 0.035, 42, 0.16);
+  }
+  function playBonusAlertSound() {
+    tone(740, 0.08, "square", 0.045, 980);
+    tone(980, 0.08, "square", 0.045, 1320, 0.08);
+    tone(1320, 0.12, "triangle", 0.04, 1760, 0.16);
+  }
+  function playMultiballExcitementSound() {
+    for (let i = 0; i < 5; i++) tone(620 + i * 150, 0.075, "sawtooth", 0.03, 880 + i * 175, i * 0.055);
+    noise(0.18, 0.045, 1450, 0.08);
+  }
+  function playWhirlpoolSound() {
+    tone(180, 0.42, "sine", 0.07, 72);
+    tone(560, 0.18, "triangle", 0.04, 980, 0.08);
+    tone(98, 0.38, "sine", 0.04, 52, 0.12);
+    noise(0.22, 0.04, 760);
+  }
+  function playTreasureSound() {
+    tone(920, 0.08, "sine", 0.052, 1320);
+    tone(1360, 0.12, "triangle", 0.042, 1900, 0.07);
+    tone(2200, 0.05, "sine", 0.02, 2600, 0.16);
+  }
+  function playGameOverSound() {
+    tone(260, 0.5, "sawtooth", 0.08, 44);
+    tone(90, 0.65, "sine", 0.055, 30, 0.18);
+    noise(0.35, 0.05, 450, 0.1);
+  }
+  function playLaunchSound() {
+    tone(260, 0.09, "sawtooth", 0.055, 620);
+    tone(680, 0.13, "triangle", 0.045, 1120, 0.04);
+    noise(0.09, 0.033, 1500);
+  }
+
+  function updateUI() {
+    ui.score.textContent = Math.floor(state.score);
+    ui.mult.textContent = `${state.multiplier}x`;
+    ui.balls.textContent = state.balls;
+  }
+
+  function addScore(points, x, y, label = "") {
+    const total = points * state.multiplier;
+    state.score += total;
+    const color = label.includes("SHARK") ? "#ffec72" : label.includes("WHALE") ? "#c7f8ff" : label.includes("TREASURE") || label.includes("WHIRLPOOL") ? "#8ffcff" : "#ffffff";
+    state.scoreTexts.push({ text: `${label}${label ? " " : ""}+${total}`, x, y, life: 1, color });
+    updateUI();
+  }
+
+  function resetBall(ready = true) {
+    ball.x = launcher.x;
+    ball.y = launcher.restY;
+    ball.vx = 0;
+    ball.vy = 0;
+    ball.hidden = false;
+    ball.inLauncher = true;
+    state.captureType = null;
+    state.launched = !ready;
+    state.chargingLaunch = false;
+    state.launchPower = 0;
+    state.plungerKick = 0;
+    state.whaleHold = 0;
+    state.whaleDark = 0;
+    state.whirlpoolHold = 0;
+    state.whirlpoolCooldown = 0;
+    state.whirlpoolDark = 0;
+    state.bonusMode = null;
+    state.bonusTimer = 0;
+    state.treasures = [];
+    state.whaleBubbles = [];
+  }
+
+  function newGame() {
+    unlockAudio();
+    state.mode = "play";
+    state.score = 0;
+    state.multiplier = 1;
+    state.balls = 3;
+    state.shake = 0;
+    audio.bubbleClock = 0;
+    state.ballTrail = [];
+    state.scoreTexts = [];
+    state.whaleBubbles = [];
+    state.treasures = [];
+    state.bonusMode = null;
+    state.bonusTimer = 0;
+    state.whirlpoolCooldown = 0;
+    state.whirlpoolDark = 0;
+    ui.title.classList.add("hidden");
+    ui.over.classList.add("hidden");
+    resetBall(true);
+    updateUI();
+  }
+
+  function endGame() {
+    if (state.mode === "gameover") return;
+    state.mode = "gameover";
+    ui.final.textContent = Math.floor(state.score);
+    ui.over.classList.remove("hidden");
+    playGameOverSound();
+  }
+
+  function loseBall() {
+    state.balls--;
+    updateUI();
+    if (state.balls <= 0) {
+      endGame();
+      return;
+    }
+    resetBall(true);
+  }
+
+  function beginLaunchCharge() {
+    unlockAudio();
+    if (state.mode !== "play" || !ball.inLauncher || ball.hidden) return;
+    state.chargingLaunch = true;
+  }
+
+  function releaseLaunchCharge() {
+    unlockAudio();
+    if (state.mode !== "play" || !ball.inLauncher || ball.hidden || !state.chargingLaunch) return;
+    state.chargingLaunch = false;
+    const power = Math.max(0.08, state.launchPower);
+    state.launched = true;
+    ball.x = launcher.x;
+    ball.y = Math.min(ball.y, launcher.restY);
+    ball.vx = 0;
+    ball.vy = -(5.2 + power * 13.8);
+    state.plungerKick = 1;
+    state.launchPower = 0;
+    playLaunchSound();
+  }
+
+  function createFish() {
+    state.fish = [];
+    state.fishSchools = [];
+    state.shimmer = [];
+    const colors = ["#ffdd5f", "#ff6b8b", "#6cffb0", "#7afcff", "#f08cff", "#ff9b45"];
+    for (let i = 0; i < 15; i++) {
+      state.fish.push({
+        x: Math.random() * W,
+        y: 80 + Math.random() * 500,
+        s: 0.55 + Math.random() * 1.3,
+        speed: 0.25 + Math.random() * 0.55,
+        dir: Math.random() < 0.5 ? -1 : 1,
+        color: colors[i % colors.length],
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+    for (let i = 0; i < 4; i++) {
+      state.fishSchools.push({
+        x: Math.random() * W,
+        y: 120 + i * 118 + Math.random() * 34,
+        count: 5 + Math.floor(Math.random() * 4),
+        speed: 0.18 + Math.random() * 0.22,
+        dir: Math.random() < 0.5 ? -1 : 1,
+        color: colors[(i + 2) % colors.length],
+        spread: 24 + Math.random() * 22,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+    for (let i = 0; i < 18; i++) {
+      state.shimmer.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        len: 32 + Math.random() * 82,
+        speed: 0.18 + Math.random() * 0.42,
+        alpha: 0.08 + Math.random() * 0.14
+      });
+    }
+    state.bubbles = [];
+    for (let i = 0; i < 64; i++) state.bubbles.push({ x: Math.random() * W, y: Math.random() * H, r: 1 + Math.random() * 4, vy: 0.35 + Math.random() * 1.25, a: 0.12 + Math.random() * 0.26 });
+  }
+
+  function lineCollision(seg) {
+    const ax = seg.x2 - seg.x1;
+    const ay = seg.y2 - seg.y1;
+    const len2 = ax * ax + ay * ay;
+    const t = Math.max(0, Math.min(1, ((ball.x - seg.x1) * ax + (ball.y - seg.y1) * ay) / len2));
+    const cx = seg.x1 + ax * t;
+    const cy = seg.y1 + ay * t;
+    const dx = ball.x - cx;
+    const dy = ball.y - cy;
+    const dist = Math.hypot(dx, dy) || 0.001;
+    if (dist >= ball.r + 7) return;
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const overlap = ball.r + 7 - dist;
+    ball.x += nx * overlap;
+    ball.y += ny * overlap;
+    const dot = ball.vx * nx + ball.vy * ny;
+    if (dot < 0) {
+      ball.vx -= 1.82 * dot * nx;
+      ball.vy -= 1.82 * dot * ny;
+      ball.vx *= 0.94;
+      ball.vy *= 0.94;
+    }
+  }
+
+  function flipperTip(f) {
+    return { x: f.x + Math.cos(f.angle) * f.len, y: f.y + Math.sin(f.angle) * f.len };
+  }
+
+  function flipperCollision(f) {
+    const tip = flipperTip(f);
+    const ax = tip.x - f.x;
+    const ay = tip.y - f.y;
+    const len2 = ax * ax + ay * ay;
+    const t = Math.max(0, Math.min(1, ((ball.x - f.x) * ax + (ball.y - f.y) * ay) / len2));
+    const cx = f.x + ax * t;
+    const cy = f.y + ay * t;
+    const dx = ball.x - cx;
+    const dy = ball.y - cy;
+    const dist = Math.hypot(dx, dy) || 0.001;
+    if (dist >= ball.r + 12) return;
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const active = Math.abs(f.target - f.up) < 0.01;
+    ball.x += nx * (ball.r + 12 - dist);
+    ball.y += ny * (ball.r + 12 - dist);
+    const dot = ball.vx * nx + ball.vy * ny;
+    ball.vx -= 1.7 * dot * nx;
+    ball.vy -= 1.7 * dot * ny;
+    if (active) {
+      ball.vx += f.side * 4.4;
+      ball.vy -= 8.4;
+    }
+  }
+
+  function bumperHit(b) {
+    const dx = ball.x - b.x;
+    const dy = ball.y - b.y;
+    const dist = Math.hypot(dx, dy) || 0.001;
+    if (dist >= ball.r + b.r) return;
+    const nx = dx / dist;
+    const ny = dy / dist;
+    let force = 7.2;
+    if (b.type === "dolphin") force = 8.2;
+    if (b.type === "shark") force = 11.6;
+    ball.x += nx * (ball.r + b.r - dist);
+    ball.y += ny * (ball.r + b.r - dist);
+    ball.vx = nx * force + ball.vx * 0.28;
+    ball.vy = ny * force + ball.vy * 0.28;
+    b.flash = 1;
+    if (b.type === "coral") {
+      addScore(b.points, b.x, b.y, "CORAL");
+      playBubblePopSound();
+      playRicochetSound();
+    } else if (b.type === "shell") {
+      addScore(b.points, b.x, b.y, "SHELL POP");
+      ball.vy -= 1.5;
+      playBubblePopSound();
+      playRicochetSound();
+    } else if (b.type === "post") {
+      addScore(b.points, b.x, b.y, "REEF POST");
+      playRicochetSound();
+    } else if (b.type === "dolphin") {
+      state.multiplier = Math.min(8, state.multiplier + 1);
+      addScore(b.points, b.x, b.y, "DOLPHIN MULTI!");
+      playDolphinSound();
+      playBonusAlertSound();
+      updateUI();
+    } else {
+      addScore(b.points, b.x, b.y, "SHARK RISK BONUS!");
+      state.shake = Math.max(state.shake, 13);
+      playSharkSound();
+    }
+  }
+
+  function handleWhale() {
+    whale.x = whale.baseX + Math.sin(state.time * 0.55) * 42;
+    whale.y = whale.baseY + Math.sin(state.time * 1.15 + 0.7) * 9;
+    whale.mouthX = whale.x + 2;
+    whale.mouthY = whale.y + 18;
+    whale.mouthOpen = Math.max(0, Math.sin(state.time * 1.35 - 0.55));
+    if (state.whaleCooldown > 0) state.whaleCooldown--;
+    if (state.whaleDark > 0) state.whaleDark = Math.max(0, state.whaleDark - 0.025);
+    if (ball.hidden && state.captureType === "whale") {
+      state.whaleHold--;
+      ball.x = whale.mouthX;
+      ball.y = whale.mouthY;
+      if (state.whaleHold <= 0) {
+        ball.hidden = false;
+        ball.x = whale.x - 12;
+        ball.y = whale.y + 48;
+        ball.vx = -5.8 + (Math.random() - 0.5) * 2.2;
+        ball.vy = -12.8;
+        state.whaleCooldown = 70;
+        state.whaleDark = 0.35;
+        state.captureType = null;
+        spawnBubbleBurst(whale.mouthX, whale.mouthY, 28);
+        state.shake = Math.max(state.shake, 9);
+        playWhaleSound();
+      }
+      return;
+    }
+    const d = Math.hypot(ball.x - whale.mouthX, ball.y - whale.mouthY);
+    if (!ball.hidden && d < ball.r + whale.mouthR + whale.mouthOpen * 16 && whale.mouthOpen > 0.55 && state.whaleCooldown <= 0 && state.launched && !ball.inLauncher) {
+      ball.hidden = true;
+      state.captureType = "whale";
+      ball.vx = 0;
+      ball.vy = 0;
+      state.whaleHold = 60;
+      state.whaleDark = 0.65;
+      whale.flash = 1;
+      state.shake = Math.max(state.shake, 10);
+      addScore(1200, whale.x, whale.y - 42, "WHALE BONUS!");
+      spawnBubbleBurst(whale.mouthX, whale.mouthY, 34);
+      playWhaleSound();
+      playBonusAlertSound();
+    }
+  }
+
+  function startTreasureHunt() {
+    state.bonusMode = "treasure";
+    state.bonusTimer = 620;
+    state.whirlpoolHold = 0;
+    state.whirlpoolDark = 0.52;
+    state.captureType = null;
+    ball.hidden = false;
+    ball.x = whirlpool.x;
+    ball.y = whirlpool.y + 58;
+    ball.vx = (Math.random() < 0.5 ? -1 : 1) * 5.4;
+    ball.vy = -10.5;
+    state.treasures = [
+      { x: 112, y: 252, r: 12, taken: false },
+      { x: 468, y: 258, r: 12, taken: false },
+      { x: 205, y: 388, r: 12, taken: false },
+      { x: 396, y: 388, r: 12, taken: false },
+      { x: 302, y: 536, r: 12, taken: false }
+    ];
+    addScore(1000, whirlpool.x, whirlpool.y - 42, "TREASURE HUNT!");
+    spawnBubbleBurst(whirlpool.x, whirlpool.y, 42);
+    state.shake = Math.max(state.shake, 8);
+    playWhirlpoolSound();
+    playMultiballExcitementSound();
+  }
+
+  function endTreasureHunt() {
+    if (state.bonusMode !== "treasure") return;
+    state.bonusMode = null;
+    state.bonusTimer = 0;
+    state.treasures = [];
+    state.whirlpoolDark = 0.24;
+    addScore(500, W / 2, 176, "BACK TO REEF!");
+  }
+
+  function enterWhirlpool() {
+    state.bonusMode = "whirlpool";
+    state.whirlpoolHold = 52;
+    state.whirlpoolCooldown = 260;
+    state.whirlpoolDark = 0.82;
+    state.captureType = "whirlpool";
+    whirlpool.flash = 1;
+    ball.hidden = true;
+    ball.vx = 0;
+    ball.vy = 0;
+    addScore(1500, whirlpool.x, whirlpool.y - 48, "WHIRLPOOL BONUS!");
+    spawnBubbleBurst(whirlpool.x, whirlpool.y, 54);
+    state.shake = Math.max(state.shake, 12);
+    playWhirlpoolSound();
+    playBonusAlertSound();
+  }
+
+  function applyWhirlpoolSuction() {
+    if (state.whirlpoolCooldown > 0 || ball.inLauncher || ball.hidden || !state.launched) return;
+    const dx = whirlpool.x - ball.x;
+    const dy = whirlpool.y - ball.y;
+    const d = Math.max(1, Math.hypot(dx, dy));
+    const reach = whirlpool.r * 2.45;
+    if (d > reach) return;
+    const pull = (1 - d / reach) * 0.22;
+    const swirl = (1 - d / reach) * 0.13;
+    ball.vx += dx / d * pull + -dy / d * swirl;
+    ball.vy += dy / d * pull + dx / d * swirl;
+  }
+
+  function handleWhirlpool() {
+    whirlpool.spin += 0.09 + (state.bonusMode ? 0.045 : 0);
+    whirlpool.flash *= 0.88;
+    if (state.whirlpoolCooldown > 0) state.whirlpoolCooldown--;
+    if (state.whirlpoolDark > 0) state.whirlpoolDark = Math.max(0, state.whirlpoolDark - 0.012);
+
+    if (state.bonusMode === "whirlpool" && state.captureType === "whirlpool") {
+      state.whirlpoolHold--;
+      ball.x = whirlpool.x + Math.cos(whirlpool.spin * 2.4) * Math.max(0, state.whirlpoolHold * 0.18);
+      ball.y = whirlpool.y + Math.sin(whirlpool.spin * 2.4) * Math.max(0, state.whirlpoolHold * 0.12);
+      if (state.whirlpoolHold <= 0) startTreasureHunt();
+      return;
+    }
+
+    if (state.bonusMode === "treasure") {
+      state.bonusTimer--;
+      state.treasures.forEach(t => {
+        if (t.taken) return;
+        if (Math.hypot(ball.x - t.x, ball.y - t.y) < ball.r + t.r + 4) {
+          t.taken = true;
+          addScore(650, t.x, t.y - 18, "TREASURE!");
+          spawnBubbleBurst(t.x, t.y, 18);
+          playTreasureSound();
+          playBonusAlertSound();
+        }
+      });
+      if (state.bonusTimer <= 0 || state.treasures.every(t => t.taken)) endTreasureHunt();
+    }
+
+    const d = Math.hypot(ball.x - whirlpool.x, ball.y - whirlpool.y);
+    if (!state.bonusMode && d < whirlpool.inner + ball.r + 5 && state.whirlpoolCooldown <= 0 && state.launched && !ball.inLauncher && !ball.hidden) {
+      enterWhirlpool();
+    }
+  }
+
+  function spawnBubbleBurst(x, y, count = 20) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 1.2 + Math.random() * 4.8;
+      state.whaleBubbles.push({
+        x,
+        y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 2.2,
+        r: 2 + Math.random() * 5,
+        life: 0.75 + Math.random() * 0.45
+      });
+    }
+  }
+
+  function handleFishTunnels() {
+    for (const t of fishTunnels) {
+      if (t.cooldown > 0) {
+        t.cooldown--;
+        continue;
+      }
+      if (ball.x + ball.r > t.x && ball.x - ball.r < t.x + t.w && ball.y + ball.r > t.y && ball.y - ball.r < t.y + t.h) {
+        ball.x = t.outX;
+        ball.y = t.outY;
+        ball.vx = t.vx;
+        ball.vy = t.vy;
+        t.cooldown = 90;
+        addScore(450, t.x + t.w / 2, t.y, t.label);
+        playDolphinSound();
+        playBonusAlertSound();
+        state.shake = Math.max(state.shake, 5);
+        return;
+      }
+    }
+  }
+
+  function update() {
+    state.time += 1 / 60;
+    state.shake *= 0.86;
+    state.currentPhase += 0.018;
+    if (state.mode === "play" && audio.ctx) {
+      audio.bubbleClock--;
+      if (audio.bubbleClock <= 0) {
+        playSubtleBubbleSound();
+        audio.bubbleClock = 55 + Math.random() * 95;
+      }
+    }
+    leftFlip.target = keys.left ? leftFlip.up : leftFlip.down;
+    rightFlip.target = keys.right ? rightFlip.up : rightFlip.down;
+    leftFlip.angle += (leftFlip.target - leftFlip.angle) * 0.36;
+    rightFlip.angle += (rightFlip.target - rightFlip.angle) * 0.36;
+    if (state.chargingLaunch && ball.inLauncher) {
+      state.launchPower = Math.min(1, state.launchPower + 0.018);
+    } else if (ball.inLauncher && !state.launched) {
+      state.launchPower *= 0.92;
+    }
+    state.plungerKick *= 0.82;
+    bumpers.forEach(b => b.flash *= 0.86);
+    whale.flash *= 0.9;
+
+    state.fish.forEach(f => {
+      f.x += f.speed * f.dir;
+      f.phase += 0.045;
+      if (f.dir > 0 && f.x > W + 50) f.x = -50;
+      if (f.dir < 0 && f.x < -50) f.x = W + 50;
+    });
+    state.fishSchools.forEach(s => {
+      s.x += s.speed * s.dir;
+      s.phase += 0.035;
+      if (s.dir > 0 && s.x > W + 90) s.x = -90;
+      if (s.dir < 0 && s.x < -90) s.x = W + 90;
+    });
+    state.shimmer.forEach(s => {
+      s.x += s.speed;
+      s.y += Math.sin(state.time * 0.9 + s.x * 0.01) * 0.08;
+      if (s.x - s.len > W) {
+        s.x = -s.len;
+        s.y = Math.random() * H;
+      }
+    });
+    state.bubbles.forEach(b => {
+      b.y -= b.vy;
+      b.x += Math.sin(state.time * 1.3 + b.y * 0.02) * 0.18;
+      if (b.y < -20) { b.y = H + 20; b.x = Math.random() * W; }
+    });
+    state.whaleBubbles = state.whaleBubbles.filter(b => {
+      b.life -= 0.025;
+      b.x += b.vx;
+      b.y += b.vy;
+      b.vy -= 0.025;
+      return b.life > 0;
+    });
+
+    state.scoreTexts = state.scoreTexts.filter(t => {
+      t.life -= 0.018;
+      t.y -= 0.75;
+      return t.life > 0;
+    });
+
+    if (state.mode !== "play") return;
+    handleWhale();
+    handleWhirlpool();
+    if (ball.inLauncher) {
+      ball.x = launcher.x;
+      if (!state.launched) {
+        const pull = state.launchPower * 34;
+        ball.y += (launcher.restY - pull - ball.y) * 0.28;
+        return;
+      }
+      ball.vy += 0.12;
+      ball.y += ball.vy;
+      ball.x = launcher.x;
+      ball.vx = 0;
+      if (ball.y <= launcher.releaseY) {
+        ball.inLauncher = false;
+        ball.x = 478;
+        ball.y = launcher.releaseY;
+        ball.vx = -5.4 - Math.min(2.2, Math.abs(ball.vy) * 0.08);
+        ball.vy = -5.6 - Math.min(4.4, Math.abs(ball.vy) * 0.18);
+      } else if (ball.vy > 0 && ball.y >= launcher.restY) {
+        ball.y = launcher.restY;
+        ball.vy = 0;
+        state.launched = false;
+        state.launchPower = 0;
+      }
+      return;
+    }
+    if (ball.hidden) return;
+
+    applyWhirlpoolSuction();
+    const current = Math.sin(state.time * 1.7 + ball.y * 0.012) * 0.016;
+    ball.vx += current;
+    ball.vx *= 0.996;
+    ball.vy = ball.vy * 0.998 + 0.18;
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+
+    const max = 14.5;
+    const speed = Math.hypot(ball.vx, ball.vy);
+    if (speed > max) {
+      ball.vx = ball.vx / speed * max;
+      ball.vy = ball.vy / speed * max;
+    }
+
+    state.ballTrail.push({ x: ball.x, y: ball.y, life: 0.75 });
+    if (state.ballTrail.length > 26) state.ballTrail.shift();
+    state.ballTrail.forEach(t => t.life -= 0.025);
+    state.ballTrail = state.ballTrail.filter(t => t.life > 0);
+
+    if (ball.x - ball.r < 58) { ball.x = 58 + ball.r; ball.vx = Math.abs(ball.vx) * 0.86; }
+    if (ball.x + ball.r > 542) { ball.x = 542 - ball.r; ball.vx = -Math.abs(ball.vx) * 0.86; }
+    if (ball.y - ball.r < 36) { ball.y = 36 + ball.r; ball.vy = Math.abs(ball.vy) * 0.86; }
+    reefWalls.forEach(lineCollision);
+    seaweedLanes.forEach(lineCollision);
+    flipperCollision(leftFlip);
+    flipperCollision(rightFlip);
+    bumpers.forEach(bumperHit);
+    handleFishTunnels();
+
+    if (ball.y > H + 20 || (ball.y > 730 && ball.x > 238 && ball.x < 362)) loseBall();
+  }
+
+  function drawWater() {
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "#70f5ff");
+    grad.addColorStop(0.22, "#19c7ed");
+    grad.addColorStop(0.68, "#0784cb");
+    grad.addColorStop(1, "#034c89");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    const glow = ctx.createRadialGradient(W / 2, 100, 20, W / 2, 240, 470);
+    glow.addColorStop(0, "rgba(255,255,255,0.24)");
+    glow.addColorStop(0.38, "rgba(92,255,236,0.14)");
+    glow.addColorStop(1, "rgba(0,72,146,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    for (let i = -3; i < 10; i++) {
+      const x = i * 82 + Math.sin(state.time * 0.7 + i) * 24;
+      const ray = ctx.createLinearGradient(x, 0, x + 90, H);
+      ray.addColorStop(0, "rgba(255,255,255,0.82)");
+      ray.addColorStop(0.3, "rgba(212,255,255,0.22)");
+      ray.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = ray;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + 34, 0);
+      ctx.lineTo(x + 118, H);
+      ctx.lineTo(x + 58, H);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.save();
+    state.shimmer.forEach(s => {
+      ctx.globalAlpha = s.alpha * (0.65 + Math.sin(state.time * 2.4 + s.y) * 0.35);
+      ctx.strokeStyle = "#dfffff";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.quadraticCurveTo(s.x + s.len * 0.45, s.y + Math.sin(state.time + s.y) * 3, s.x + s.len, s.y + 2);
+      ctx.stroke();
+    });
+    ctx.restore();
+
+    state.fish.forEach(drawFish);
+    state.fishSchools.forEach(drawFishSchool);
+    state.bubbles.forEach(b => {
+      ctx.save();
+      ctx.globalAlpha = b.a;
+      ctx.strokeStyle = "#e9ffff";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    });
+    state.whaleBubbles.forEach(b => {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, b.life);
+      ctx.strokeStyle = "#ffffff";
+      ctx.fillStyle = "rgba(199,248,255,0.18)";
+      ctx.lineWidth = 2;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "#c7f8ff";
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawFish(f) {
+    ctx.save();
+    ctx.translate(f.x, f.y + Math.sin(f.phase) * 5);
+    ctx.scale(f.dir * f.s, f.s);
+    ctx.fillStyle = f.color;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = f.color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 14, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-13, 0);
+    ctx.lineTo(-25, -8);
+    ctx.lineTo(-25, 8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#072a43";
+    ctx.beginPath();
+    ctx.arc(8, -2, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFishSchool(s) {
+    ctx.save();
+    ctx.globalAlpha = 0.56;
+    for (let i = 0; i < s.count; i++) {
+      const row = i % 3;
+      const x = s.x - i * s.spread * s.dir;
+      const y = s.y + (row - 1) * 12 + Math.sin(s.phase + i) * 4;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(s.dir * 0.55, 0.55);
+      ctx.fillStyle = s.color;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = s.color;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 12, 5.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-10, 0);
+      ctx.lineTo(-20, -6);
+      ctx.lineTo(-20, 6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawReefWalls() {
+    ctx.save();
+    ctx.lineCap = "round";
+    reefWalls.forEach((w, i) => {
+      const texturePhase = state.time * 1.8 + i;
+      const wallGrad = ctx.createLinearGradient(w.x1, w.y1, w.x2, w.y2);
+      wallGrad.addColorStop(0, i < 2 ? "#ff9b45" : "#ff6f7d");
+      wallGrad.addColorStop(0.5, i % 2 ? "#ffd166" : "#f15bb5");
+      wallGrad.addColorStop(1, i < 2 ? "#ff6f7d" : "#ffb048");
+      ctx.strokeStyle = wallGrad;
+      ctx.lineWidth = 22;
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = i % 2 ? "#ff8bd1" : "#ffcf75";
+      ctx.beginPath();
+      ctx.moveTo(w.x1, w.y1);
+      ctx.lineTo(w.x2, w.y2);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(72, 37, 25, 0.26)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 10]);
+      ctx.lineDashOffset = -texturePhase * 6;
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.45)";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      if (i % 3 === 0) {
+        const tx = (w.x1 + w.x2) / 2 + Math.sin(texturePhase) * 5;
+        const ty = (w.y1 + w.y2) / 2 + Math.cos(texturePhase) * 5;
+        ctx.fillStyle = "rgba(255, 237, 114, 0.25)";
+        ctx.beginPath();
+        ctx.arc(tx, ty, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+    ctx.restore();
+    drawCoralPatch(70, 632, 1.15);
+    drawCoralPatch(525, 632, 1.15);
+    drawCoralPatch(70, 180, 0.75);
+    drawCoralPatch(525, 180, 0.75);
+    drawSeaweedLanes();
+    drawFishTunnels();
+  }
+
+  function drawSeaweedLanes() {
+    ctx.save();
+    ctx.lineCap = "round";
+    seaweedLanes.forEach((w, idx) => {
+      ctx.strokeStyle = idx < 2 ? "rgba(56, 255, 152, 0.78)" : "rgba(32, 210, 120, 0.72)";
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "#50ff9a";
+      ctx.lineWidth = idx < 2 ? 12 : 9;
+      ctx.beginPath();
+      ctx.moveTo(w.x1, w.y1);
+      const cx = (w.x1 + w.x2) / 2 + Math.sin(state.time * 2 + idx) * 8;
+      const cy = (w.y1 + w.y2) / 2;
+      ctx.quadraticCurveTo(cx, cy, w.x2, w.y2);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(216,255,208,0.58)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  function drawFishTunnels() {
+    ctx.save();
+    fishTunnels.forEach((t, i) => {
+      const pulse = 0.5 + Math.sin(state.time * 4 + i) * 0.5;
+      ctx.shadowBlur = 18 + pulse * 10;
+      ctx.shadowColor = "#ffed72";
+      ctx.fillStyle = "rgba(255, 237, 114, 0.17)";
+      ctx.strokeStyle = "#ffed72";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.roundRect(t.x, t.y, t.w, t.h, 18);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#fff";
+      ctx.font = "900 11px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.fillText(i === 0 ? "FISH TUNNEL" : "RETURN LANE", t.x + t.w / 2, t.y - 8);
+      ctx.fillStyle = i === 0 ? "#ffdd5f" : "#7afcff";
+      ctx.beginPath();
+      ctx.ellipse(t.x + 18 + pulse * 8, t.y + t.h / 2, 12, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(t.x + 7 + pulse * 8, t.y + t.h / 2);
+      ctx.lineTo(t.x - 5 + pulse * 8, t.y + t.h / 2 - 7);
+      ctx.lineTo(t.x - 5 + pulse * 8, t.y + t.h / 2 + 7);
+      ctx.closePath();
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function drawCoralPatch(x, y, s) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s, s);
+    ctx.lineCap = "round";
+    for (let i = 0; i < 8; i++) {
+      const a = -Math.PI / 2 + (i - 3.5) * 0.25;
+      ctx.strokeStyle = i % 2 ? "#ff5c88" : "#ffb048";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, 18);
+      ctx.quadraticCurveTo(Math.cos(a) * 18, Math.sin(a) * 18, Math.cos(a) * 30, Math.sin(a) * 32);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawWhale() {
+    ctx.save();
+    ctx.translate(whale.x, whale.y);
+    ctx.shadowBlur = 18 + whale.flash * 25;
+    ctx.shadowColor = "#bdf8ff";
+    ctx.fillStyle = "#7bc7e6";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, whale.rx, whale.ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#d7fbff";
+    ctx.beginPath();
+    ctx.ellipse(10, 15, 62, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#275475";
+    ctx.beginPath();
+    ctx.arc(45, -9, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#123b5b";
+    ctx.beginPath();
+    ctx.ellipse(0, 18, 25 + whale.mouthOpen * 22, 7 + whale.mouthOpen * 17 + whale.flash * 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.8)";
+    ctx.lineWidth = 2;
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * 10, 8);
+      ctx.lineTo(i * 8, 13 + whale.mouthOpen * 8);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#7bc7e6";
+    ctx.beginPath();
+    ctx.moveTo(-86, -5);
+    ctx.lineTo(-130, -30);
+    ctx.lineTo(-115, 5);
+    ctx.lineTo(-130, 36);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = whale.mouthOpen > 0.55 ? "#ffed72" : "#ffffff";
+    ctx.font = "900 15px Trebuchet MS";
+    ctx.textAlign = "center";
+    ctx.fillText(whale.mouthOpen > 0.55 ? "MOUTH OPEN!" : "WHALE BONUS", 0, -58);
+    ctx.restore();
+  }
+
+  function drawWhirlpool() {
+    ctx.save();
+    ctx.translate(whirlpool.x, whirlpool.y);
+    const pulse = 0.5 + Math.sin(state.time * 5) * 0.5;
+    ctx.shadowBlur = 22 + whirlpool.flash * 30 + pulse * 8;
+    ctx.shadowColor = "#37e8ff";
+    const glow = ctx.createRadialGradient(0, 0, 4, 0, 0, whirlpool.r + 30);
+    glow.addColorStop(0, "rgba(0, 12, 33, 0.96)");
+    glow.addColorStop(0.38, "rgba(33, 232, 255, 0.42)");
+    glow.addColorStop(0.72, "rgba(16, 88, 186, 0.22)");
+    glow.addColorStop(1, "rgba(16, 88, 186, 0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, whirlpool.r + 24, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (let i = 0; i < 5; i++) {
+      const radius = whirlpool.r - i * 6;
+      const start = whirlpool.spin + i * 0.8;
+      ctx.strokeStyle = i % 2 ? "rgba(173,255,255,0.9)" : "rgba(48,191,255,0.82)";
+      ctx.lineWidth = Math.max(2, 6 - i);
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, start, start + Math.PI * 1.25);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = "#001427";
+    ctx.beginPath();
+    ctx.arc(0, 0, whirlpool.inner + pulse * 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#eaffff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 12px Trebuchet MS";
+    ctx.textAlign = "center";
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = "#37e8ff";
+    ctx.fillText("BONUS HOLE", 0, whirlpool.r + 24);
+    ctx.restore();
+  }
+
+  function drawTreasures() {
+    if (state.bonusMode !== "treasure") return;
+    state.treasures.forEach((t, i) => {
+      if (t.taken) return;
+      ctx.save();
+      ctx.translate(t.x, t.y);
+      const pulse = 1 + Math.sin(state.time * 7 + i) * 0.12;
+      ctx.scale(pulse, pulse);
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = "#ffed72";
+      ctx.fillStyle = "#ffed72";
+      ctx.beginPath();
+      for (let p = 0; p < 5; p++) {
+        const a = -Math.PI / 2 + p * Math.PI * 0.4;
+        const rr = p % 2 ? t.r * 0.55 : t.r;
+        const x = Math.cos(a) * rr;
+        const y = Math.sin(a) * rr;
+        if (p === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    ctx.save();
+    ctx.fillStyle = "#8ffcff";
+    ctx.font = "900 16px Trebuchet MS";
+    ctx.textAlign = "center";
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = "#37e8ff";
+    ctx.fillText(`TREASURE HUNT ${Math.ceil(state.bonusTimer / 60)}s`, W / 2, 114);
+    ctx.restore();
+  }
+
+  function drawBumper(b) {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    const pulse = 1 + b.flash * 0.18 + Math.sin(state.time * 4 + b.x) * 0.03;
+    const halo = b.flash * 0.55 + (state.multiplier > 1 ? Math.min(0.22, state.multiplier * 0.025) : 0);
+    if (halo > 0.01) {
+      const haloGrad = ctx.createRadialGradient(0, 0, b.r * 0.4, 0, 0, b.r * 2.3);
+      haloGrad.addColorStop(0, `rgba(255,255,255,${0.18 + halo * 0.22})`);
+      haloGrad.addColorStop(0.45, `rgba(122,252,255,${halo * 0.32})`);
+      haloGrad.addColorStop(1, "rgba(122,252,255,0)");
+      ctx.fillStyle = haloGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, b.r * 2.25, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.scale(pulse, pulse);
+    if (b.type === "coral") {
+      ctx.shadowBlur = 18 + b.flash * 18;
+      ctx.shadowColor = "#ff8c5f";
+      ctx.fillStyle = "#ff6f7d";
+      for (let i = 0; i < 8; i++) {
+        const a = i * Math.PI / 4;
+        ctx.beginPath();
+        ctx.roundRect(Math.cos(a) * 6 - 5, Math.sin(a) * 7 - b.r, 10, b.r, 6);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#ffd166";
+      ctx.beginPath();
+      ctx.arc(0, 0, b.r * 0.52, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (b.type === "shell") {
+      ctx.shadowBlur = 18 + b.flash * 16;
+      ctx.shadowColor = "#ffffff";
+      ctx.fillStyle = "#f7e8c8";
+      ctx.beginPath();
+      ctx.moveTo(0, -b.r);
+      for (let i = 0; i <= 8; i++) {
+        const a = Math.PI + (i / 8) * Math.PI;
+        const rr = b.r * (0.75 + (i % 2) * 0.15);
+        ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr + b.r * 0.45);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#ff9b45";
+      ctx.lineWidth = 2;
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, -b.r * 0.75);
+        ctx.lineTo(i * b.r * 0.22, b.r * 0.52);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#fff";
+      ctx.font = "900 10px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.fillText("SHELL", 0, b.r + 14);
+    } else if (b.type === "post") {
+      ctx.shadowBlur = 15 + b.flash * 16;
+      ctx.shadowColor = "#ffed72";
+      const post = ctx.createRadialGradient(-4, -5, 2, 0, 0, b.r);
+      post.addColorStop(0, "#ffffff");
+      post.addColorStop(0.45, "#ffed72");
+      post.addColorStop(1, "#ff7b45");
+      ctx.fillStyle = post;
+      ctx.beginPath();
+      ctx.arc(0, 0, b.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    } else if (b.type === "dolphin") {
+      ctx.shadowBlur = 20 + b.flash * 24;
+      ctx.shadowColor = "#a9f8ff";
+      ctx.fillStyle = "#86e6ff";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, b.r, b.r * 0.55, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-26, 0);
+      ctx.lineTo(-47, -12);
+      ctx.lineTo(-39, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#173d55";
+      ctx.beginPath();
+      ctx.arc(16, -7, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.font = "900 12px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.fillText("MULTI", 0, 42);
+    } else {
+      ctx.shadowBlur = 22 + b.flash * 24;
+      ctx.shadowColor = "#ff3f5d";
+      ctx.fillStyle = "#566575";
+      ctx.beginPath();
+      ctx.moveTo(-b.r, 10);
+      ctx.quadraticCurveTo(-5, -32, b.r + 20, 0);
+      ctx.quadraticCurveTo(0, 30, -b.r, 10);
+      ctx.fill();
+      ctx.fillStyle = "#ff4b5f";
+      ctx.beginPath();
+      ctx.moveTo(12, -6);
+      ctx.lineTo(32, -3);
+      ctx.lineTo(14, 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#071829";
+      ctx.beginPath();
+      ctx.arc(13, -8, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.font = "900 12px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.fillText("RISK", 0, 44);
+    }
+    ctx.restore();
+  }
+
+  function drawFlipper(f) {
+    const tip = flipperTip(f);
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = "#ffed72";
+    ctx.strokeStyle = "#fff1a3";
+    ctx.lineWidth = 18;
+    ctx.beginPath();
+    ctx.moveTo(f.x, f.y);
+    ctx.lineTo(tip.x, tip.y);
+    ctx.stroke();
+    ctx.strokeStyle = "#0bd4dd";
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(f.x, f.y);
+    ctx.lineTo(tip.x, tip.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBall() {
+    state.ballTrail.forEach((t, i) => {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, t.life) * 0.45;
+      ctx.strokeStyle = "#e9ffff";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(t.x + Math.sin(i) * 2, t.y, 3 + i * 0.08, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    });
+    if (ball.hidden) return;
+    ctx.save();
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = "#ffffff";
+    const grad = ctx.createRadialGradient(ball.x - 3, ball.y - 4, 1, ball.x, ball.y, ball.r * 1.4);
+    grad.addColorStop(0, "#ffffff");
+    grad.addColorStop(0.4, "#bfffff");
+    grad.addColorStop(1, "#1aa0d0");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawComboGlow() {
+    if (state.multiplier <= 1) return;
+    const strength = Math.min(0.42, 0.07 + state.multiplier * 0.045);
+    ctx.save();
+    ctx.globalAlpha = strength * (0.72 + Math.sin(state.time * 5) * 0.28);
+    ctx.strokeStyle = state.multiplier >= 5 ? "#ffed72" : "#7afcff";
+    ctx.lineWidth = 5 + state.multiplier * 0.5;
+    ctx.shadowBlur = 22 + state.multiplier * 3;
+    ctx.shadowColor = ctx.strokeStyle;
+    ctx.strokeRect(56, 54, W - 112, H - 82);
+    ctx.font = "900 18px Trebuchet MS";
+    ctx.textAlign = "center";
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.fillText(`${state.multiplier}x REEF COMBO GLOW`, W / 2, 58);
+    ctx.restore();
+  }
+
+  function drawLauncherLane() {
+    ctx.save();
+    const pull = (state.launchPower || 0) * 46;
+    const kick = (state.plungerKick || 0) * 36;
+    const plungerY = launcher.restY + 30 - pull + kick;
+    ctx.strokeStyle = "rgba(255,255,255,0.62)";
+    ctx.lineWidth = 5;
+    ctx.setLineDash([10, 9]);
+    ctx.beginPath();
+    ctx.moveTo(launcher.x, launcher.restY + 40);
+    ctx.lineTo(launcher.x, launcher.topY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "rgba(255,237,114,0.72)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(launcher.x - 17, launcher.restY + 44);
+    ctx.lineTo(launcher.x - 17, launcher.topY);
+    ctx.moveTo(launcher.x + 17, launcher.restY + 44);
+    ctx.lineTo(launcher.x + 17, launcher.topY);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,237,114,0.2)";
+    ctx.beginPath();
+    ctx.roundRect(launcher.x - 17, launcher.topY, 34, launcher.restY + 44 - launcher.topY, 16);
+    ctx.fill();
+
+    ctx.save();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#ffed72";
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = "#ffed72";
+    ctx.beginPath();
+    const coils = 8;
+    const springTop = Math.min(launcher.restY + 28, plungerY - 92);
+    for (let i = 0; i <= coils * 8; i++) {
+      const t = i / (coils * 8);
+      const y = springTop + t * (plungerY - springTop);
+      const x = launcher.x + Math.sin(t * coils * Math.PI * 2) * 12;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "#ffed72";
+    ctx.strokeStyle = "#8b4b00";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(launcher.x - 23, plungerY, 46, 15, 7);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    if (ball.inLauncher) {
+      ctx.save();
+      ctx.fillStyle = "rgba(0,24,42,0.72)";
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(launcher.x + 28, launcher.restY - 128, 16, 112, 8);
+      ctx.fill();
+      ctx.stroke();
+      const meterH = 104 * state.launchPower;
+      const meter = ctx.createLinearGradient(0, launcher.restY - 16, 0, launcher.restY - 128);
+      meter.addColorStop(0, "#6cffb0");
+      meter.addColorStop(0.55, "#ffed72");
+      meter.addColorStop(1, "#ff5f6f");
+      ctx.fillStyle = meter;
+      ctx.beginPath();
+      ctx.roundRect(launcher.x + 31, launcher.restY - 20 - meterH, 10, meterH, 5);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.fillStyle = "rgba(255,237,114,0.92)";
+    ctx.font = "900 13px Trebuchet MS";
+    ctx.textAlign = "center";
+    ctx.save();
+    ctx.translate(launcher.x - 30, 522);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText("HOLD SPACE / LAUNCH", 0, 0);
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function render() {
+    ctx.save();
+    if (state.shake > 0) ctx.translate((Math.random() - 0.5) * state.shake, (Math.random() - 0.5) * state.shake);
+    drawWater();
+    drawReefWalls();
+    drawWhale();
+    drawWhirlpool();
+    drawTreasures();
+    bumpers.forEach(drawBumper);
+    drawLauncherLane();
+    drawFlipper(leftFlip);
+    drawFlipper(rightFlip);
+    drawBall();
+    drawComboGlow();
+
+    if (state.whaleDark > 0 || state.whirlpoolDark > 0) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(state.whaleDark * 0.45, state.whirlpoolDark * 0.55);
+      ctx.fillStyle = state.whirlpoolDark > state.whaleDark ? "#001d3d" : "#00182e";
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    state.scoreTexts.forEach(t => {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, t.life);
+      ctx.textAlign = "center";
+      ctx.font = `900 ${22 + (1 - t.life) * 10}px Trebuchet MS`;
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "#044367";
+      ctx.fillStyle = t.color;
+      ctx.shadowBlur = 16;
+      ctx.shadowColor = t.color;
+      ctx.strokeText(t.text, t.x, t.y);
+      ctx.fillText(t.text, t.x, t.y);
+      ctx.restore();
+    });
+
+    if (ball.inLauncher && state.mode === "play") {
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = "#ffed72";
+      ctx.font = "900 24px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = "#ffed72";
+      ctx.fillText("HOLD LAUNCH, RELEASE TO SHOOT", W / 2, 92);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function loop() {
+    update();
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  function setFlip(side, on) {
+    unlockAudio();
+    if (side === "left") keys.left = on;
+    if (side === "right") keys.right = on;
+    if (on) playFlipperSound();
+  }
+
+  function bindButton(el, side) {
+    const down = e => { e.preventDefault(); el.classList.add("pressed"); setFlip(side, true); };
+    const up = e => { e.preventDefault(); el.classList.remove("pressed"); setFlip(side, false); };
+    el.addEventListener("pointerdown", down, { passive: false });
+    el.addEventListener("pointerup", up, { passive: false });
+    el.addEventListener("pointerleave", up, { passive: false });
+    el.addEventListener("pointercancel", up, { passive: false });
+  }
+
+  window.addEventListener("keydown", e => {
+    unlockAudio();
+    if (e.code === "KeyA" || e.code === "ArrowLeft") { if (!keys.left) playFlipperSound(); keys.left = true; e.preventDefault(); }
+    if (e.code === "KeyS" || e.code === "ArrowRight") { if (!keys.right) playFlipperSound(); keys.right = true; e.preventDefault(); }
+    if (e.code === "Space") { beginLaunchCharge(); e.preventDefault(); }
+  });
+
+  window.addEventListener("keyup", e => {
+    if (e.code === "KeyA" || e.code === "ArrowLeft") keys.left = false;
+    if (e.code === "KeyS" || e.code === "ArrowRight") keys.right = false;
+    if (e.code === "Space") { releaseLaunchCharge(); e.preventDefault(); }
+  });
+
+  document.addEventListener("contextmenu", e => e.preventDefault());
+  document.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
+  ui.start.addEventListener("click", newGame);
+  ui.again.addEventListener("click", newGame);
+  ui.reset.addEventListener("click", newGame);
+  ui.launch.addEventListener("pointerdown", e => { e.preventDefault(); beginLaunchCharge(); }, { passive: false });
+  ui.launch.addEventListener("pointerup", e => { e.preventDefault(); releaseLaunchCharge(); }, { passive: false });
+  ui.launch.addEventListener("pointerleave", e => { e.preventDefault(); releaseLaunchCharge(); }, { passive: false });
+  ui.launch.addEventListener("pointercancel", e => { e.preventDefault(); releaseLaunchCharge(); }, { passive: false });
+  bindButton(ui.left, "left");
+  bindButton(ui.right, "right");
+
+  createFish();
+  updateUI();
+  render();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
